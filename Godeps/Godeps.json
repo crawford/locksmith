@@ -11,11 +11,6 @@
 			"Rev": "7745cfd7f8e619cc9e6be450238e6253a57a227f"
 		},
 		{
-			"ImportPath": "github.com/coreos/go-systemd/dbus",
-			"Comment": "v2-39-ge3e4f602334e",
-			"Rev": "e3e4f602334ec3e1c2cd68322a1284903c62f940"
-		},
-		{
 			"ImportPath": "github.com/coreos/go-systemd/login1",
 			"Comment": "v2-39-ge3e4f602334e",
 			"Rev": "e3e4f602334ec3e1c2cd68322a1284903c62f940"
