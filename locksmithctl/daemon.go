@@ -27,7 +27,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/coreos/locksmith/Godeps/_workspace/src/github.com/coreos/go-systemd/dbus"
 	"github.com/coreos/locksmith/Godeps/_workspace/src/github.com/coreos/go-systemd/login1"
 
 	"github.com/coreos/locksmith/lock"
@@ -138,23 +137,12 @@ func setupLock() (lck *lock.Lock, err error) {
 	return lck, nil
 }
 
-// etcdActive returns true if etcd is not in an inactive state according to systemd.
+// etcdActive returns true if a connection to the configured etcd endpoint can be established.
 func etcdActive() (running bool, err error) {
-	sys, err := dbus.New()
+	_, err = getClient()
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("Error initializing etcd client: %v", err)
 	}
-	defer sys.Close()
-
-	prop, err := sys.GetUnitProperty("etcd.service", "ActiveState")
-	if err != nil {
-		return false, fmt.Errorf("Error getting etcd.service ActiveState: %v", err)
-	}
-
-	if prop.Value.Value().(string) == "inactive" {
-		return false, nil
-	}
-
 	return true, nil
 }
 
@@ -171,10 +159,10 @@ func (r rebooter) useLock() (useLock bool, err error) {
 			return false, err
 		}
 		if running {
-			fmt.Println("etcd.service is active")
+			fmt.Println("etcd is running")
 			useLock = true
 		} else {
-			fmt.Println("etcd.service is inactive")
+			fmt.Println("etcd connection cannot be established")
 			useLock = false
 		}
 	case StrategyEtcdLock:
@@ -242,11 +230,11 @@ func unlockHeldLocks(stop chan struct{}, wg *sync.WaitGroup) {
 		case <-time.After(interval):
 			active, err := etcdActive()
 			if err != nil {
-				reason = "error checking on etcd.service"
+				reason = "error connecting to etcd"
 				break
 			}
 			if !active {
-				reason = "etcd.service is inactive"
+				reason = "etcd connection cannot be established"
 				break
 			}
 
